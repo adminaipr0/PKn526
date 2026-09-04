@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PancasilaKids - Pembelajaran Interaktif Kelas 5</title>
+  
+  <!-- Tailwind CSS & Font Awesome Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* Kanvas Air Interaktif */
+    #waterCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 40;
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+    }
+
+    /* Scrollbar nuansa air */
+    ::-webkit-scrollbar {
+      width: 9px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #e0f2fe;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #38bdf8;
+      border-radius: 6px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #0284c7;
+    }
+
+    .water-btn {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+    .water-btn:active {
+      transform: scale(0.97);
+    }
+
+    /* Format Cetak Khusus LKPD */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printArea, #printArea * {
+        visibility: visible;
+      }
+      #printArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 15px;
+        background: white !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-b from-sky-50 via-teal-50 to-amber-50 text-slate-800 min-h-screen relative selection:bg-sky-200 selection:text-sky-900">
+
+  <!-- Efek Air Interaktif: Canvas Gelombang Riak -->
+  <canvas id="waterCanvas"></canvas>
+
+  <!-- Header Navigasi -->
+  <header class="sticky top-0 z-30 glass-card shadow-sm border-b border-sky-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('beranda')">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-red-600 flex items-center justify-center text-white text-lg shadow-md">
+          <i class="fa-solid fa-landmark-dome"></i>
+        </div>
+        <div>
+          <h1 class="font-black text-lg text-slate-800 flex items-center gap-1.5">
+            Pancasila<span class="text-sky-600">Kids</span> 
+            <span class="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold border border-amber-300">Kelas 5</span>
+          </h1>
+          <p class="text-[11px] text-slate-500 hidden sm:block">Media Belajar Mandiri Kurikulum Merdeka</p>
+        </div>
+      </div>
+
+      <!-- Menu Tab -->
+      <nav class="flex items-center gap-1 overflow-x-auto py-1 text-xs sm:text-sm font-semibold">
+        <button onclick="switchTab('beranda')" id="nav-beranda" class="nav-item px-3 py-1.5 rounded-xl bg-sky-600 text-white shadow-sm flex items-center gap-1">
+          <i class="fa-solid fa-house"></i> Beranda
+        </button>
+        <button onclick="switchTab('bab1')" id="nav-bab1" class="nav-item px-3 py-1.5 rounded-xl hover:bg-sky-100 text-slate-700 flex items-center gap-1">
+          <span class="w-4 h-4 rounded-full bg-red-100 text-red-700 text-[10px] flex items-center justify-center font-bold">1</span> Bab 1
+        </button>
+        <button onclick="switchTab('bab2')" id="nav-bab2" class="nav-item px-3 py-1.5 rounded-xl hover:bg-sky-100 text-slate-700 flex items-center gap-1">
+          <span class="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 text-[10px] flex items-center justify-center font-bold">2</span> Bab 2
+        </button>
+        <button onclick="switchTab('bab3')" id="nav-bab3" class="nav-item px-3 py-1.5 rounded-xl hover:bg-sky-100 text-slate-700 flex items-center gap-1">
+          <span class="w-4 h-4 rounded-full bg-amber-100 text-amber-700 text-[10px] flex items-center justify-center font-bold">3</span> Bab 3
+        </button>
+        <button onclick="switchTab('bab4')" id="nav-bab4" class="nav-item px-3 py-1.5 rounded-xl hover:bg-sky-100 text-slate-700 flex items-center gap-1">
+          <span class="w-4 h-4 rounded-full bg-blue-100 text-blue-700 text-[10px] flex items-center justify-center font-bold">4</span> Bab 4
+        </button>
+        <button onclick="switchTab('evaluasi')" id="nav-evaluasi" class="nav-item px-3 py-1.5 rounded-xl hover:bg-indigo-100 text-indigo-700 flex items-center gap-1 bg-indigo-50 border border-indigo-200">
+          <i class="fa-solid fa-clipboard-check"></i> Kuis & LKPD
+        </button>
+      </nav>
+
+      <!-- Pengatur Audio & Skor -->
+      <div class="flex items-center space-x-2">
+        <button onclick="toggleAudioFx()" title="Audio Suara Air" class="w-8 h-8 rounded-xl bg-white border border-sky-200 text-sky-600 flex items-center justify-center hover:bg-sky-50 shadow-sm">
+          <i class="fa-solid fa-volume-high text-xs" id="soundIcon"></i>
+        </button>
+        <div class="bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-xl text-xs font-bold text-amber-800 flex items-center gap-1 shadow-sm">
+          <i class="fa-solid fa-star text-amber-500"></i>
+          <span>Poin: <span id="totalPointDisplay">0</span></span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Notifikasi Fitur Air Aktif -->
+  <div class="bg-sky-500/10 border-b border-sky-200 text-sky-900 text-[11px] py-1 px-4 text-center font-medium">
+    <i class="fa-solid fa-water text-sky-600 animate-pulse"></i> <b>Interaksi Air Aktif:</b> Klik atau scroll layar kapan saja untuk memicu riak air dan denting suara air alami.
+  </div>
+
+  <!-- ISI KONTEN -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24">
+
+    <!-- ==================== BERANDA ==================== -->
+    <section id="tab-beranda" class="tab-content block space-y-6">
+      <div class="rounded-3xl bg-gradient-to-r from-sky-600 via-teal-600 to-emerald-600 text-white p-6 sm:p-10 shadow-xl space-y-3">
+        <span class="inline-block px-3 py-1 rounded-full bg-white/20 text-xs font-bold text-sky-100">Pendidikan Pancasila Fase C</span>
+        <h2 class="text-2xl sm:text-4xl font-black">Pancasila Jiwa Kita, Pedoman Kehidupan Bermasyarakat</h2>
+        <p class="text-xs sm:text-sm text-sky-100 leading-relaxed max-w-2xl">
+          Jelajahi sumber belajar digital lengkap dengan materi detail, komparasi tabel, kuis interaktif berperingkat nilai, dan Lembar Kerja Peserta Didik (LKPD) yang dapat dicetak langsung.
+        </p>
+        <div class="pt-2 flex flex-wrap gap-2">
+          <button onclick="switchTab('bab1')" class="water-btn px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold rounded-xl text-xs flex items-center gap-1.5 shadow">
+            <i class="fa-solid fa-book-open"></i> Pelajari Bab 1
+          </button>
+          <button onclick="switchTab('evaluasi')" class="water-btn px-4 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/30 rounded-xl text-xs font-bold flex items-center gap-1.5">
+            <i class="fa-solid fa-pen-to-square"></i> Langsung Latihan Kuis
+          </button>
+        </div>
+      </div>
+
+      <!-- Kartu 4 Bab Pembelajaran -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="glass-card p-5 rounded-2xl border-t-4 border-red-500 shadow-sm flex flex-col justify-between space-y-3">
+          <div>
+            <span class="text-[10px] font-bold bg-red-100 text-red-800 px-2 py-0.5 rounded-md">BAB 1</span>
+            <h3 class="font-bold text-slate-800 text-sm mt-1">Pancasila dalam Kehidupanku</h3>
+            <p class="text-xs text-slate-500 mt-1">5 Sila Pancasila, pandangan hidup bangsa, gotong royong, dan perilaku santun berinteraksi.</p>
+          </div>
+          <button onclick="switchTab('bab1')" class="w-full py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg water-btn">Buka Bab 1</button>
+        </div>
+
+        <div class="glass-card p-5 rounded-2xl border-t-4 border-emerald-500 shadow-sm flex flex-col justify-between space-y-3">
+          <div>
+            <span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md">BAB 2</span>
+            <h3 class="font-bold text-slate-800 text-sm mt-1">Norma dalam Kehidupanku</h3>
+            <p class="text-xs text-slate-500 mt-1">Aturan bermasyarakat, sikap disiplin, dan komparasi 4 norma (Agama, Kesusilaan, Kesopanan, Hukum).</p>
+          </div>
+          <button onclick="switchTab('bab2')" class="w-full py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg water-btn">Buka Bab 2</button>
+        </div>
+
+        <div class="glass-card p-5 rounded-2xl border-t-4 border-amber-500 shadow-sm flex flex-col justify-between space-y-3">
+          <div>
+            <span class="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md">BAB 3</span>
+            <h3 class="font-bold text-slate-800 text-sm mt-1">Keragaman Budaya Indonesiaku</h3>
+            <p class="text-xs text-slate-500 mt-1">Pakaian adat, rumah tradisional, tarian, alat musik, dan aksi konkret pelestarian warisan daerah.</p>
+          </div>
+          <button onclick="switchTab('bab3')" class="w-full py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg water-btn">Buka Bab 3</button>
+        </div>
+
+        <div class="glass-card p-5 rounded-2xl border-t-4 border-blue-500 shadow-sm flex flex-col justify-between space-y-3">
+          <div>
+            <span class="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md">BAB 4</span>
+            <h3 class="font-bold text-slate-800 text-sm mt-1">Aku & Lingkungan Sekitarku</h3>
+            <p class="text-xs text-slate-500 mt-1">Karakteristik bentang wilayah pegunungan, pantai, dataran rendah, serta tahapan aksi kerja bakti.</p>
+          </div>
+          <button onclick="switchTab('bab4')" class="w-full py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg water-btn">Buka Bab 4</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== BAB 1 ==================== -->
+    <section id="tab-bab1" class="tab-content hidden space-y-5">
+      <div class="rounded-2xl bg-gradient-to-r from-red-600 to-rose-700 text-white p-5 shadow flex justify-between items-center flex-wrap gap-2">
+        <div>
+          <span class="text-[10px] font-bold bg-white/20 px-2.5 py-0.5 rounded-full">MATERI UTAMA BAB 1</span>
+          <h2 class="text-xl sm:text-2xl font-black mt-1">Pancasila dalam Kehidupanku</h2>
+        </div>
+        <button onclick="speakText('content-bab1')" class="water-btn px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-xl text-xs font-bold">
+          <i class="fa-solid fa-volume-high"></i> Bacakan Teks
+        </button>
+      </div>
+
+      <div id="content-bab1" class="space-y-4 text-xs sm:text-sm">
+        <div class="glass-card p-5 rounded-2xl border border-slate-200 space-y-3">
+          <h3 class="font-bold text-red-700 text-base">1. Pengamalan 5 Sila Pancasila</h3>
+          <p class="text-slate-600">Pancasila adalah dasar negara dan pedoman tingkah laku hidup bermasyarakat, berbangsa, dan bernegara:</p>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            <div class="p-3 bg-amber-50 rounded-xl border border-amber-200">
+              <span class="font-bold text-amber-800 block mb-1">⭐ Sila ke-1: Ketuhanan Yang Maha Esa</span>
+              <p class="text-slate-600"><b>Ciri & Makna:</b> Beriman, bertakwa, serta saling menghormati dan memberi kebebasan ibadah antarumat beragama.</p>
+              <p class="mt-1 text-slate-500"><b>Contoh:</b> Berdoa sebelum dan sesudah belajar, rukun berteman walau beda agama.</p>
+            </div>
+            <div class="p-3 bg-red-50 rounded-xl border border-red-200">
+              <span class="font-bold text-red-800 block mb-1">⛓️ Sila ke-2: Kemanusiaan yang Adil dan Beradab</span>
+              <p class="text-slate-600"><b>Ciri & Makna:</b> Menjunjung tinggi kesetaraan derajat manusia, tolong-menolong, empati, dan tidak diskriminatif.</p>
+              <p class="mt-1 text-slate-500"><b>Contoh:</b> Menjenguk dan membantu teman atau tetangga yang sakit tanpa mengharap imbalan.</p>
+            </div>
+            <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200">
+              <span class="font-bold text-emerald-800 block mb-1">🌳 Sila ke-3: Persatuan Indonesia</span>
+              <p class="text-slate-600"><b>Ciri & Makna:</b> Menjaga kerukunan, cinta tanah air, dan menempatkan kepentingan bersama di atas golongan.</p>
+              <p class="mt-1 text-slate-500"><b>Contoh:</b> Bekerja bakti bersama tanpa membedakan latar belakang suku dan bahasa.</p>
+            </div>
+            <div class="p-3 bg-slate-100 rounded-xl border border-slate-300">
+              <span class="font-bold text-slate-800 block mb-1">🐂 Sila ke-4: Kerakyatan & Musyawarah Mufakat</span>
+              <p class="text-slate-600"><b>Ciri & Makna:</b> Mengutamakan musyawarah mufakat, menghargai pendapat lain, dan tidak memaksakan kehendak.</p>
+              <p class="mt-1 text-slate-500"><b>Contoh:</b> Berdiskusi secara damai saat pemilihan pengurus kelas atau pembagian regu piket.</p>
+            </div>
+          </div>
+          <div class="p-3 bg-blue-50 rounded-xl border border-blue-200 text-xs">
+            <span class="font-bold text-blue-800 block mb-1">🌾 Sila ke-5: Keadilan Sosial bagi Seluruh Rakyat Indonesia</span>
+            <p class="text-slate-600"><b>Ciri & Makna:</b> Bersikap adil, menghargai hak dan karya orang lain, serta peduli terhadap sesama.</p>
+            <p class="mt-1 text-slate-500"><b>Contoh:</b> Membagi tugas kelompok secara merata dan gemar menabung (tidak bergaya hidup boros).</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="glass-card p-5 rounded-2xl border border-slate-200 space-y-2">
+            <h4 class="font-bold text-slate-800 text-sm">2. Pandangan Hidup Bangsa</h4>
+            <p class="text-slate-600 text-xs leading-relaxed">
+              Pancasila menjadi petunjuk arah dalam bersikap, bertindak, dan memecahkan persoalan hidup. Nilai-nilainya bersumber dari kepribadian luhur nenek moyang nusantara.
+            </p>
+          </div>
+          <div class="glass-card p-5 rounded-2xl border border-slate-200 space-y-2">
+            <h4 class="font-bold text-slate-800 text-sm">3. Gotong Royong & Interaksi Terpuji</h4>
+            <p class="text-slate-600 text-xs leading-relaxed">
+              Gotong royong adalah bekerja bersama-sama tanpa pamrih demi tujuan bersama. Dalam pergaulan, biasakan mengucap salam, berbicara santun, jujur, dan menghargai masukan orang lain.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== BAB 2 ==================== -->
+    <section id="tab-bab2" class="tab-content hidden space-y-5">
+      <div class="rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white p-5 shadow flex justify-between items-center flex-wrap gap-2">
+        <div>
+          <span class="text-[10px] font-bold bg-white/20 px-2.5 py-0.5 rounded-full">MATERI UTAMA BAB 2</span>
+          <h2 class="text-xl sm:text-2xl font-black mt-1">Norma dalam Kehidupanku</h2>
+        </div>
+        <button onclick="speakText('content-bab2')" class="water-btn px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-xl text-xs font-bold">
+          <i class="fa-solid fa-volume-high"></i> Bacakan Teks
+        </button>
+      </div>
+
+      <div id="content-bab2" class="space-y-4 text-xs sm:text-sm">
+        <div class="glass-card p-5 rounded-2xl border border-slate-200 space-y-2">
+          <h3 class="font-bold text-emerald-800 text-base">1. Makna Norma & Sikap Disiplin</h3>
+          <p class="text-slate-600 text-xs leading-relaxed">
+            <b>Norma</b> adalah aturan atau ketentuan yang mengatur tingkah laku manusia dalam kehidupan bermasyarakat agar tercipta ketertiban, keamanan, dan kenyamanan bersama. 
+            <b>Disiplin</b> berarti menjalankan aturan dengan penuh kesadaran dan tanggung jawab, bukan semata karena takut hukuman.
+          </p>
+        </div>
+
+        <div class="glass-card p-5 rounded-2xl border border-slate-200 space-y-3">
+          <h3 class="font-bold text-slate-800 text-sm">2. Tabel Komparasi 4 Macam Norma</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border border-slate-200 rounded-xl overflow-hidden">
+              <thead class="bg-slate-100 text-slate-700 font-bold border-b">
+                <tr>
+                  <th class="p-2.5">Norma</th>
+                  <th class="p-2.5">Sumber</th>
+                  <th class="p-2.5">Sanksi Pelanggaran</th>
+                  <th class="p-2.5">Contoh Tindakan</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 bg-white">
+                <tr>
+                  <td class="p-2.5 font-bold text-amber-800">Norma Agama</td>
+                  <td class="p-2.5 text-slate-600">Ajaran / Wahyu Tuhan</td>
+                  <td class="p-2.5 text-rose-600">Dosa, siksa batin dari Tuhan</td>
+                  <td class="p-2.5 text-slate-600">Rajin ibadah, berbakti kepada orang tua</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 font-bold text-emerald-800">Norma Kesusilaan</td>
+                  <td class="p-2.5 text-slate-600">Hati nurani manusia</td>
+                  <td class="p-2.5 text-rose-600">Rasa bersalah, penyesalan mendalam</td>
+                  <td class="p-2.5 text-slate-600">Jujur, tidak menyontek, tidak mencuri</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 font-bold text-sky-800">Norma Kesopanan</td>
+                  <td class="p-2.5 text-slate-600">Pergaulan / adat warga</td>
+                  <td class="p-2.5 text-rose-600">Dicela, dikucilkan, dicemooh</td>
+                  <td class="p-2.5 text-slate-600">Mengucap salam, pamit, tidak berkata kasar</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 font-bold text-blue-800">Norma Hukum</td>
+                  <td class="p-2.5 text-slate-600">Peraturan perundang-undangan</td>
+                  <td class="p-2.5 text-rose-600 font-semibold">Tegas: Denda, kurungan, penjara</td>
+                  <td class="p-2.5 text-slate-600">Tertib lalu lintas, tidak merusak fasilitas umum</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== BAB 3 ==================== -->
+    <section id="tab-bab3" class="tab-content hidden space-y-5">
+      <div class="rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-white p-5 shadow flex justify-between items-center flex-wrap gap-2">
+        <div>
+          <span class="text-[10px] font-bold bg-white/20 px-2.5 py-0.5 rounded-full">MATERI UTAMA BAB 3</span>
+          <h2 class="text-xl sm:text-2xl font-black mt-1">Keragaman Budaya Indonesiaku</h2>
+        </div>
+        <button onclick="speakText('content-bab3')" class="water-btn px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-xl text-xs font-bold">
+          <i class="fa-solid fa-volume-high"></i> Bacakan Teks
+        </button>
+      </div>
+
+      <div id="content-bab3" class="space-y-4 text-xs sm:text-sm">
+        <div class="glass-card p-5 rounded-2xl border border-slate-200 space-y-3">
+          <h3 class="font-bold text-amber-800 text-base">1. Ragam Aspek Budaya Nusantara</h3>
+          <p class="text-slate-600 text-xs">Perbedaan budaya bukan pemisah, melainkan kekayaan pemersatu bangsa:</p>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+            <div class="p-3 bg-orange-50 rounded-xl border border-orange-200">
+              <span class="font-bold text-orange-900 block mb-1">👘 Pakaian Adat</span>
+              <p class="text-slate-600">• Ulee Balang (Aceh)</p>
+              <p class="text-slate-600">• Kebaya (Jawa)</p>
+              <p class="text-slate-600">• Baju Bodo (Sulawesi Selatan)</p>
+              <p class="text-slate-600">• Koteka (Papua)</p>
+            </div>
+            <div class="p-3 bg-amber-50 rounded-xl border border-amber-200">
+              <span class="font-bold text-amber-900 block mb-1">🏠 Rumah Adat</span>
+              <p class="text-slate-600">• Gadang (Sumatera Barat)</p>
+              <p class="text-slate-600">• Joglo (Jawa Tengah)</p>
+              <p class="text-slate-600">• Tongkonan (Sulawesi Selatan)</p>
+              <p class="text-slate-600">• Honai (Papua)</p>
+            </div>
+            <div class="p-3 bg-rose-50 rounded-xl border border-rose-200">
+              <span class="font-bold text-rose-900 block mb-1">💃 Tarian Daerah</span>
+              <p class="text-slate-600">• Tari Saman (Aceh)</p>
+              <p class="text-slate-600">• Tari Kecak (Bali)</p>
+              <p class="text-slate-600">• Tari Tor-Tor (Sumatera Utara)</p>
+            </div>
+            <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200">
+              <span class="font-bold text-emerald-900 block mb-1">🪕 Alat Musik</span>
+              <p class="text-slate-600">• Angklung (Jawa Barat)</p>
+              <p class="text-slate-600">• Sasando (NTT)</p>
+              <p class="text-slate-600">• Tifa (Papua)</p>
+            </div>
+            <div class="p-3 bg-sky-50 rounded-xl border border-sky-200">
+              <span class="font-bold text-sky-900 block mb-1">🍲 Makanan Khas</span>
+              <p class="text-slate-600">• Rendang (Sumatera Barat)</p>
+              <p class="text-slate-600">• Gudeg (Yogyakarta)</p>
+              <p class="text-slate-600">• Papeda (Papua)</p>
+            </div>
+            <div class="p-3 bg-purple-50 rounded-xl border border-purple-200">
+              <span class="font-bold text-purple-900 block mb-1">🗣️ Bahasa Daerah & Nasional</span>
+              <p class="text-slate-600">Ratusan bahasa daerah dipersatukan oleh <b>Bahasa Indonesia</b> sebagai bahasa persatuan antarsuku.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card p-4 rounded-xl border border-slate-200 text-xs space-y-1">
+          <span class="font-bold text-slate-800">Cara Melestarikan Budaya Daerah:</span>
+          <p class="text-slate-600">1) Mempelajari kesenian daerah, 2) Menggunakan produk lokal nusantara, 3) Menghargai keragaman budaya teman tanpa mencela.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== BAB 4 ==================== -->
+    <section id="tab-bab4" class="tab-content hidden space-y-5">
+      <div class="rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-700 text-white p-5 shadow flex justify-between items-center flex-wrap gap-2">
+        <div>
+          <span class="text-[10px] font-bold bg-white/20 px-2.5 py-0.5 rounded-full">MATERI UTAMA BAB 4</span>
+          <h2 class="text-xl sm:text-2xl font-black mt-1">Aku dan Lingkungan Sekitarku</h2>
+        </div>
+        <button onclick="speakText('content-bab4')" class="water-btn px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-xl text-xs font-bold">
+          <i class="fa-solid fa-volume-high"></i> Bacakan Teks
+        </button>
+      </div>
+
+      <div id="content-bab4" class="space-y-4 text-xs sm:text-sm">
+        <div class="glass-card p-5 rounded-2xl border border-slate-200 space-y-3">
+          <h3 class="font-bold text-blue-800 text-base">1. Karakteristik Wilayah Lingkungan</h3>
+          <p class="text-slate-600 text-xs">Setiap wilayah memiliki bentang alam, potensi sumber daya alam (SDA), dan mata pencaharian warga yang adaptif:</p>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+            <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200">
+              <span class="font-bold text-emerald-900 block mb-1">⛰️ Wilayah Pegunungan</span>
+              <p class="text-slate-600">• Ciri: Sejuk, banyak bukit, tanah subur.</p>
+              <p class="text-slate-600">• SDA: Teh, kopi, sayuran.</p>
+              <p class="text-slate-600">• Profesi: Petani kebun, pemandu wisata.</p>
+            </div>
+            <div class="p-3 bg-amber-50 rounded-xl border border-amber-200">
+              <span class="font-bold text-amber-900 block mb-1">🏙️ Dataran Rendah</span>
+              <p class="text-slate-600">• Ciri: Rata, suhu hangat, pusat fasilitas.</p>
+              <p class="text-slate-600">• SDA: Padi, jagung, tanah liat.</p>
+              <p class="text-slate-600">• Profesi: Petani sawah, pedagang, karyawan.</p>
+            </div>
+            <div class="p-3 bg-cyan-50 rounded-xl border border-cyan-200">
+              <span class="font-bold text-cyan-900 block mb-1">🏖️ Pesisir Pantai</span>
+              <p class="text-slate-600">• Ciri: Berbatasan laut lepas, angin semilir.</p>
+              <p class="text-slate-600">• SDA: Ikan laut, garam, rumput laut.</p>
+              <p class="text-slate-600">• Profesi: Nelayan, petani tambak garam.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card p-5 rounded-2xl border border-slate-200 space-y-2">
+          <h3 class="font-bold text-slate-800 text-sm">2. Lima Langkah Praktik Gotong Royong Lingkungan</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[11px] text-center">
+            <div class="p-2.5 bg-slate-50 rounded-xl border font-semibold">1. Tentukan Kegiatan</div>
+            <div class="p-2.5 bg-slate-50 rounded-xl border font-semibold">2. Ajak Warga</div>
+            <div class="p-2.5 bg-slate-50 rounded-xl border font-semibold">3. Bagi Tugas Adil</div>
+            <div class="p-2.5 bg-slate-50 rounded-xl border font-semibold">4. Laksana Tanggung Jawab</div>
+            <div class="p-2.5 bg-slate-50 rounded-xl border font-semibold">5. Evaluasi & Syukuri</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== KUIS & LKPD ==================== -->
+    <section id="tab-evaluasi" class="tab-content hidden space-y-6">
+      
+      <!-- Pengatur Menu Evaluasi -->
+      <div class="glass-card p-4 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <button onclick="setEvalMode('kuis')" id="btn-mode-kuis" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 text-white font-bold text-xs flex items-center gap-1.5">
+            <i class="fa-solid fa-list-check"></i> Kuis 10 Soal per Bab
+          </button>
+          <button onclick="setEvalMode('lkpd')" id="btn-mode-lkpd" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5">
+            <i class="fa-solid fa-file-lines"></i> LKPD Digital
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-slate-600">Pilih Bab:</span>
+          <select id="evalBabSelect" onchange="onBabSelectionChange(this.value)" class="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 outline-none">
+            <option value="1">Bab 1: Pancasila dalam Kehidupanku</option>
+            <option value="2">Bab 2: Norma dalam Kehidupanku</option>
+            <option value="3">Bab 3: Keragaman Budaya Indonesiaku</option>
+            <option value="4">Bab 4: Aku dan Lingkungan Sekitarku</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Wadah Kuis -->
+      <div id="section-kuis" class="space-y-4">
+        <!-- Identitas Siswa Sebelum Kuis -->
+        <div class="glass-card p-4 rounded-2xl border border-indigo-100 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">Nama Siswa:</label>
+            <input type="text" id="quizStudentName" placeholder="Masukkan nama kamu..." class="w-full p-2 border border-slate-300 rounded-lg outline-none">
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 block mb-1">Kelas & Nomor Presensi:</label>
+            <input type="text" id="quizStudentClass" value="5 (Lima) / " class="w-full p-2 border border-slate-300 rounded-lg outline-none">
+          </div>
+        </div>
+
+        <div class="glass-card p-4 rounded-2xl border border-slate-200 flex justify-between items-center flex-wrap gap-2">
+          <h3 id="quizTitleDisplay" class="font-bold text-slate-800 text-sm">Kuis Pilihan Ganda: Bab 1</h3>
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-bold text-slate-500">Skor: <span id="quizScoreText" class="text-indigo-600 text-base font-black">0 / 100</span></span>
+            <button onclick="resetQuiz()" class="text-xs px-2.5 py-1 border rounded-lg hover:bg-slate-50">Reset</button>
+          </div>
+        </div>
+
+        <div id="quizContainer" class="space-y-3"></div>
+
+        <!-- Kartu Selesai Kuis -->
+        <div id="quizFinishBox" class="hidden p-5 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-center space-y-2">
+          <h4 class="font-bold text-base">Selamat, Kuis Selesai!</h4>
+          <p id="quizSummaryNotice" class="text-xs text-indigo-100"></p>
+          <div class="pt-2">
+            <button onclick="kirimNilaiKeAppsScript()" class="water-btn px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold text-xs rounded-xl shadow">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Simpan Hasil ke Spreadsheet Guru
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Wadah LKPD -->
+      <div id="section-lkpd" class="hidden space-y-4">
+        <div class="flex justify-between items-center flex-wrap gap-2">
+          <p class="text-xs text-slate-500">Isi lembar aktivitas di bawah ini. Anda dapat mencetak langsung atau menyimpannya ke spreadsheet.</p>
+          <button onclick="window.print()" class="water-btn px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow">
+            <i class="fa-solid fa-print"></i> Cetak Lembar LKPD (PDF)
+          </button>
+        </div>
+
+        <div id="printArea" class="glass-card p-6 rounded-3xl border border-slate-300 bg-white space-y-5">
+          <!-- Kop -->
+          <div class="border-b-2 border-slate-800 pb-3 flex justify-between items-center">
+            <div>
+              <h3 class="font-black text-sm uppercase">LEMBAR KERJA PESERTA DIDIK (LKPD)</h3>
+              <p class="text-xs text-slate-500">Pendidikan Pancasila Kelas 5 SD - Kurikulum Merdeka</p>
+              <p id="lkpdBabHeader" class="text-xs font-bold text-indigo-700 mt-0.5">BAB 1: PANCASILA DALAM KEHIDUPANKU</p>
+            </div>
+            <div class="w-10 h-10 bg-red-600 text-white flex items-center justify-center rounded-lg font-bold text-lg">
+              <i class="fa-solid fa-landmark"></i>
+            </div>
+          </div>
+
+          <!-- Identitas Siswa -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
+            <div>
+              <label class="font-bold block mb-1">Nama Siswa / Kelompok:</label>
+              <input type="text" id="lkpdNama" placeholder="Ketik nama lengkap..." class="w-full p-1.5 border rounded bg-white">
+            </div>
+            <div>
+              <label class="font-bold block mb-1">Kelas / No. Presensi:</label>
+              <input type="text" id="lkpdKelas" value="5 (Lima) / " class="w-full p-1.5 border rounded bg-white">
+            </div>
+            <div>
+              <label class="font-bold block mb-1">Tanggal:</label>
+              <input type="date" id="lkpdTanggal" class="w-full p-1.5 border rounded bg-white">
+            </div>
+          </div>
+
+          <!-- Konten LKPD Dinamis Sesuai Bab -->
+          <div id="lkpdTaskContent" class="space-y-4"></div>
+
+          <!-- Tombol Simpan LKPD ke Apps Script -->
+          <div class="pt-2 no-print flex justify-end">
+            <button onclick="kirimLkpdKeAppsScript()" class="water-btn px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow">
+              <i class="fa-solid fa-paper-plane"></i> Kirim Jawaban LKPD ke Guru
+            </button>
+          </div>
+
+          <!-- Catatan Guru & Tanda Tangan -->
+          <div class="grid grid-cols-2 gap-4 pt-4 border-t border-dashed border-slate-300 text-xs">
+            <div class="p-2.5 border rounded-lg bg-slate-50 min-h-[60px]">
+              <span class="font-bold block mb-1">Catatan & Paraf Guru:</span>
+            </div>
+            <div class="text-center flex flex-col justify-between py-1">
+              <span>Guru Pengampu,</span>
+              <span class="font-bold border-t border-slate-400 pt-1 w-36 mx-auto">( ......................... )</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- JAVASCRIPT: LOGIKA AIR, SOAL KUIS, LKPD, & APPS SCRIPT HANDLER -->
+  <script>
+    /* 1. SIMULASI AIR (CANVAS RIPPLE & AUDIO API) */
+    const canvas = document.getElementById('waterCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let ripples = [];
+    let lastScrollY = window.scrollY;
+    let soundEnabled = true;
+
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Ripple {
+      constructor(x, y, maxR = 75, speed = 2.5) {
+        this.x = x;
+        this.y = y;
+        this.r = 2;
+        this.maxR = maxR;
+        this.speed = speed;
+        this.alpha = 0.6;
+      }
+      update() {
+        this.r += this.speed;
+        this.alpha *= 0.95;
+      }
+      draw(c) {
+        c.save();
+        c.beginPath();
+        c.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        c.strokeStyle = `rgba(2, 132, 199, ${this.alpha})`;
+        c.lineWidth = 2.5;
+        c.stroke();
+        c.restore();
+      }
+    }
+
+    function addRipple(x, y) {
+      ripples.push(new Ripple(x, y));
+      playWaterSound();
+    }
+
+    window.addEventListener('pointerdown', (e) => {
+      addRipple(e.clientX, e.clientY);
+    });
+
+    window.addEventListener('scroll', () => {
+      const delta = Math.abs(window.scrollY - lastScrollY);
+      if (delta > 10) {
+        ripples.push(new Ripple(Math.random() * width, Math.random() * height, 40 + delta, 3));
+      }
+      lastScrollY = window.scrollY;
+    });
+
+    function loop() {
+      ctx.clearRect(0, 0, width, height);
+      for (let i = ripples.length - 1; i >= 0; i--) {
+        ripples[i].update();
+        ripples[i].draw(ctx);
+        if (ripples[i].alpha <= 0.01 || ripples[i].r >= ripples[i].maxR) {
+          ripples.splice(i, 1);
+        }
+      }
+      requestAnimationFrame(loop);
+    }
+    loop();
+
+    // Suara Tetes Air Web Audio API
+    let audioCtx = null;
+    function playWaterSound() {
+      if (!soundEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.frequency.setValueAtTime(400 + Math.random() * 200, now);
+        osc.frequency.exponentialRampToValueAtTime(700, now + 0.08);
+        gain.gain.setValueAtTime(0.05, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.1);
+      } catch (e) {}
+    }
+
+    function toggleAudioFx() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('soundIcon').className = soundEnabled ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark text-slate-400';
+    }
+
+    /* 2. TEXT-TO-SPEECH (PEMBACA SUARA) */
+    function speakText(containerId) {
+      if (!('speechSynthesis' in window)) return;
+      if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+        return;
+      }
+      const el = document.getElementById(containerId);
+      if (!el) return;
+      const utter = new SpeechSynthesisUtterance(el.innerText.substring(0, 1000));
+      utter.lang = 'id-ID';
+      window.speechSynthesis.speak(utter);
+    }
+
+    /* 3. SISTEM NAVIGASI TAB */
+    function switchTab(tabId) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.querySelectorAll('.nav-item').forEach(el => {
+        el.className = 'nav-item px-3 py-1.5 rounded-xl hover:bg-sky-100 text-slate-700 flex items-center gap-1';
+      });
+      const activeNav = document.getElementById(`nav-${tabId}`);
+      if (activeNav) {
+        activeNav.className = 'nav-item px-3 py-1.5 rounded-xl bg-sky-600 text-white shadow-sm flex items-center gap-1 font-bold';
+      }
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      const activeContent = document.getElementById(`tab-${tabId}`);
+      if (activeContent) activeContent.classList.remove('hidden');
+
+      if (tabId === 'evaluasi') {
+        const b = document.getElementById('evalBabSelect').value;
+        loadQuiz(b);
+        renderLKPD(b);
+      }
+    }
+
+    /* 4. DATABASE SOAL LENGKAP DARI PEDOMAN RANGKUMAN (10 SOAL PER BAB) */
+    const kuisDatabase = {
+      1: {
+        title: "Kuis Bab 1: Pancasila dalam Kehidupanku",
+        soal: [
+          { q: "1. Perilaku berikut yang sesuai dengan nilai Ketuhanan Yang Maha Esa adalah ....", o: ["a. berdoa sebelum dan sesudah belajar", "b. menghargai teman yang berbeda agama", "c. mengikuti ibadah sesuai agama sendiri", "d. semua jawaban benar"], c: 3 },
+          { q: "2. Pancasila sebagai pandangan hidup bangsa berarti ....", o: ["a. Pancasila hanya untuk dipelajari di sekolah", "b. Pancasila menjadi pedoman sikap dan perilaku dalam kehidupan sehari-hari", "c. Pancasila hanya berlaku bagi pejabat negara", "d. Pancasila tidak perlu diamalkan"], c: 1 },
+          { q: "3. Contoh perilaku yang mencerminkan sila kedua 'Kemanusiaan yang Adil dan Beradab' adalah ....", o: ["a. menaati aturan sekolah", "b. menolong teman yang kesulitan", "c. menjaga kebersihan lingkungan", "d. musyawarah saat mengambil keputusan"], c: 1 },
+          { q: "4. Gotong royong merupakan ciri khas bangsa Indonesia karena ....", o: ["a. hanya dilakukan saat ada perlombaan", "b. dilakukan bersama tanpa pamrih untuk kepentingan bersama", "c. dilakukan karena ada perintah", "d. dilakukan oleh orang dewasa saja"], c: 1 },
+          { q: "5. Ketika ada tetangga yang sakit, bentuk gotong royong dalam tolong-menolong yang tepat adalah ....", o: ["a. menunggu diminta bantuan", "b. menjenguk dan memberi bantuan", "c. mengabaikannya karena bukan urusan kita", "d. hanya memberi bantuan jika punya waktu"], c: 1 },
+          { q: "6. Gotong royong di dalam keberagaman dapat diwujudkan dengan cara ....", o: ["a. mengutamakan kelompok sendiri", "b. menghargai perbedaan dan bekerja sama dengan semua orang", "c. memilih teman yang sama agama saja", "d. tidak mau bergaul dengan yang berbeda"], c: 1 },
+          { q: "7. Perilaku berikut yang sesuai dengan sila keempat 'Kerakyatan yang Dipimpin oleh Hikmat Kebijaksanaan dalam Permusyawaratan/Perwakilan' adalah ....", o: ["a. memaksakan pendapat sendiri", "b. musyawarah untuk mencapai mufakat", "c. tidak mau mendengar pendapat orang lain", "d. memilih ketua tanpa musyawarah"], c: 1 },
+          { q: "8. Contoh perilaku terpuji dalam berinteraksi di sekolah adalah ....", o: ["a. mengejek teman yang berbeda pendapat", "b. berbicara sopan dan menggunakan bahasa yang baik", "c. tidak mau bekerja sama saat tugas kelompok", "d. memotong pembicaraan teman"], c: 1 },
+          { q: "9. Semboyan 'Bhinneka Tunggal Ika' memiliki makna ....", o: ["a. berbeda-beda tetapi tetap satu jua", "b. satu bangsa, satu bahasa", "c. hidup rukun tanpa perbedaan", "d. semua sama tanpa keberagaman"], c: 0 },
+          { q: "10. Manfaat mengamalkan nilai-nilai Pancasila dalam kehidupan sehari-hari adalah ....", o: ["a. hidup menjadi lebih sulit", "b. terwujudnya kehidupan yang rukun, damai, dan sejahtera", "c. banyak perbedaan dan perselisihan", "d. mudah bertengkar dengan teman"], c: 1 }
+        ]
+      },
+      2: {
+        title: "Kuis Bab 2: Norma dalam Kehidupanku",
+        soal: [
+          { q: "1. Norma adalah aturan atau ketentuan yang mengatur perilaku manusia dalam kehidupan bermasyarakat agar tercipta ....", o: ["a. ketertiban, keamanan, dan kenyamanan", "b. persaingan yang sehat", "c. kekuasaan yang mutlak", "d. kebebasan tanpa batas"], c: 0 },
+          { q: "2. Sikap disiplin dalam menerapkan norma berarti ....", o: ["a. mematuhi norma agar terhindar dari hukuman", "b. melakukan norma hanya di sekolah", "c. menjalankan norma dengan kesadaran diri sendiri", "d. mengikuti norma hanya jika ada yang melihat"], c: 2 },
+          { q: "3. Contoh sikap disiplin di sekolah adalah ....", o: ["a. datang tepat waktu", "b. mengerjakan tugas saat ada ulangan saja", "c. membuang sampah sembarangan", "d. menyontek saat ujian"], c: 0 },
+          { q: "4. Norma yang bersumber dari ajaran agama disebut ....", o: ["a. norma hukum", "b. norma kesusilaan", "c. norma agama", "d. norma kesopanan"], c: 2 },
+          { q: "5. Sanksi jika melanggar norma hukum adalah ....", o: ["a. teguran dari teman", "b. rasa bersalah", "c. denda, kurungan, atau hukuman", "d. dicemooh oleh tetangga"], c: 2 },
+          { q: "6. Berikut ini yang termasuk norma kesopanan adalah ....", o: ["a. membayar pajak tepat waktu", "b. memasang lampu lalu lintas", "c. mengucapkan 'permisi' saat lewat", "d. larangan membuang sampah di sungai"], c: 2 },
+          { q: "7. Norma kesusilaan bersumber dari ....", o: ["a. peraturan pemerintah", "b. hati nurani manusia", "c. ajaran agama", "d. kehendak masyarakat"], c: 1 },
+          { q: "8. Contoh pelanggaran norma di masyarakat adalah ....", o: ["a. membantu tetangga yang sedang sakit", "b. antre saat membeli tiket", "c. mencuri barang milik orang lain", "d. kerja bakti membersihkan lingkungan"], c: 2 },
+          { q: "9. Manfaat mematuhi norma dalam kehidupan sehari-hari adalah ....", o: ["a. hidup menjadi lebih bebas", "b. menciptakan ketertiban dan keharmonisan", "c. dapat melakukan apa saja", "d. menghindari diri dari kegiatan sosial"], c: 1 },
+          { q: "10. Setelah mempelajari berbagai norma, kita dapat ....", o: ["a. memilih norma yang ingin dipatuhi saja", "b. mengabaikan norma yang tidak disukai", "c. menerapkan norma dengan penuh tanggung jawab", "d. membuat norma sendiri tanpa musyawarah"], c: 2 }
+        ]
+      },
+      3: {
+        title: "Kuis Bab 3: Keragaman Budaya Indonesiaku",
+        soal: [
+          { q: "1. Indonesia memiliki banyak budaya daerah yang beragam. Hal ini merupakan ....", o: ["a. kelemahan bangsa Indonesia", "b. kekayaan bangsa Indonesia", "c. penyebab perpecahan bangsa", "d. akibat dari penjajahan"], c: 1 },
+          { q: "2. Contoh rumah adat dari Provinsi Sumatera Barat adalah ....", o: ["a. Rumah Joglo", "b. Rumah Gadang", "c. Rumah Tongkonan", "d. Rumah Honai"], c: 1 },
+          { q: "3. Tarian Kecak berasal dari daerah ....", o: ["a. Kalimantan Timur", "b. Bali", "c. Sulawesi Selatan", "d. Papua"], c: 1 },
+          { q: "4. Bahasa Indonesia sebagai bahasa persatuan berarti ....", o: ["a. bahasa daerah tidak boleh digunakan", "b. semua orang harus menggunakan bahasa asing", "c. bahasa Indonesia digunakan untuk berkomunikasi antar suku bangsa", "d. bahasa Indonesia hanya digunakan di sekolah"], c: 2 },
+          { q: "5. Contoh budaya daerah yang berupa alat musik tradisional adalah ....", o: ["a. Angklung", "b. Tari Saman", "c. Rumah Betang", "d. Pakaian Adat"], c: 0 },
+          { q: "6. Salah satu cara melestarikan budaya daerah adalah ....", o: ["a. menganggap budaya daerah kuno dan tidak penting", "b. mempelajari dan mengenalkan budaya daerah kepada orang lain", "c. hanya melestarikan budaya dari daerah sendiri", "d. mengganti budaya daerah dengan budaya asing"], c: 1 },
+          { q: "7. Pernyataan yang tepat tentang keberagaman budaya Indonesia adalah ....", o: ["a. membuat bangsa Indonesia menjadi lemah", "b. menyebabkan perbedaan yang harus dihindari", "c. menjadi kebanggaan dan mempererat persatuan", "d. hanya milik suku bangsa tertentu"], c: 2 },
+          { q: "8. Yang bukan termasuk contoh budaya daerah adalah ....", o: ["a. upacara adat", "b. permainan tradisional", "c. pakaian adat", "d. gawai digital"], c: 3 },
+          { q: "9. Festival budaya daerah dapat membantu ....", o: ["a. menghapus budaya daerah", "b. mempromosikan dan melestarikan budaya daerah", "c. mengurangi jumlah budaya daerah", "d. mengganti budaya daerah dengan budaya asing"], c: 1 },
+          { q: "10. Sikap yang tepat saat melihat teman menampilkan budaya daerah yang berbeda adalah ....", o: ["a. mengejek karena berbeda", "b. tidak peduli", "c. menghargai dan memberikan apresiasi", "d. melarangnya menampilkan budaya tersebut"], c: 2 }
+        ]
+      },
+      4: {
+        title: "Kuis Bab 4: Aku dan Lingkungan Sekitarku",
+        soal: [
+          { q: "1. Wilayah pegunungan dicirikan dengan ....", o: ["a. dataran rendah dan suhu panas", "b. permukaan datar dan dekat laut", "c. banyak bukit/pegunungan dan udara sejuk", "d. tanah berlumpur dan banyak rawa"], c: 2 },
+          { q: "2. Contoh sumber daya alam yang banyak ditemukan di wilayah pantai adalah ....", o: ["a. padi dan teh", "b. ikan dan garam", "c. kayu dan batu bara", "d. karet dan kelapa sawit"], c: 1 },
+          { q: "3. Salah satu manfaat mengetahui karakteristik wilayah adalah ....", o: ["a. agar tahu nama tokoh daerah", "b. agar dapat memanfaatkan sumber daya secara tepat", "c. agar bisa menentukan harga barang", "d. agar bisa bersaing dengan daerah lain"], c: 1 },
+          { q: "4. Gotong royong di lingkungan sekitar berarti ....", o: ["a. bekerja sendiri menyelesaikan tugas", "b. bekerja bersama-sama untuk kepentingan bersama", "c. mengerjakan tugas orang lain", "d. hanya membantu teman dekat saja"], c: 1 },
+          { q: "5. Contoh kegiatan gotong royong di lingkungan rumah adalah ....", o: ["a. belajar sendiri di kamar", "b. membersihkan halaman bersama keluarga", "c. menonton televisi bersama", "d. bermain game bersama teman"], c: 1 },
+          { q: "6. Sikap yang harus dimiliki saat gotong royong adalah ....", o: ["a. malas dan menunggu perintah", "b. semangat, ikhlas, dan tanggung jawab", "c. bekerja sendiri lebih cepat selesai", "d. memilih-milih pekerjaan"], c: 1 },
+          { q: "7. Praktik gotong royong yang tepat saat membersihkan selokan adalah ....", o: ["a. membuang sampah ke selokan", "b. membersihkan selokan bersama-sama", "c. membiarkan selokan kotor", "d. hanya satu orang yang membersihkan"], c: 1 },
+          { q: "8. Gotong royong secara rutin di lingkungan sekitar dapat menimbulkan ....", o: ["a. lingkungan kotor dan tidak sehat", "b. perselisihan antarwarga", "c. lingkungan bersih dan hubungan baik", "d. pekerjaan bertambah banyak"], c: 2 },
+          { q: "9. Kegiatan menanam pohon bersama di lingkungan sekolah merupakan bentuk gotong royong untuk ....", o: ["a. memperindah sekolah", "b. menjaga kebersihan lingkungan", "c. menjaga kelestarian lingkungan", "d. mendapatkan hadiah"], c: 2 },
+          { q: "10. Manfaat utama gotong royong dalam kehidupan sehari-hari adalah ....", o: ["a. pekerjaan ringan dan cepat selesai", "b. menghemat waktu dan biaya", "c. mempererat persatuan dan kebersamaan", "d. membuat diri lebih terkenal"], c: 2 }
+        ]
+      }
+    };
+
+    let quizAnswers = {};
+    let currentSkorKuis = 0;
+    let currentBenarCount = 0;
+
+    function loadQuiz(bab) {
+      const qData = kuisDatabase[bab];
+      if (!qData) return;
+      document.getElementById('quizTitleDisplay').innerText = qData.title;
+      document.getElementById('quizScoreText').innerText = "0 / 100";
+      document.getElementById('quizFinishBox').classList.add('hidden');
+      quizAnswers = {};
+
+      let html = "";
+      qData.soal.forEach((item, idx) => {
+        html += `
+          <div class="glass-card p-3.5 sm:p-4 rounded-xl border border-slate-200 space-y-2">
+            <p class="font-bold text-slate-800 text-xs sm:text-sm">${item.q}</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+              ${item.o.map((opt, oIdx) => `
+                <button onclick="answerQuiz(${bab}, ${idx}, ${oIdx})" id="qbtn-${idx}-${oIdx}" class="text-left text-xs p-2.5 rounded-lg border border-slate-200 hover:bg-sky-50 text-slate-700 transition">
+                  ${opt}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      });
+      document.getElementById('quizContainer').innerHTML = html;
+    }
+
+    function answerQuiz(bab, qIdx, optIdx) {
+      const correctIdx = kuisDatabase[bab].soal[qIdx].c;
+      quizAnswers[qIdx] = optIdx;
+
+      for (let i = 0; i < 4; i++) {
+        const btn = document.getElementById(`qbtn-${qIdx}-${i}`);
+        if (!btn) continue;
+        btn.disabled = true;
+        if (i === correctIdx) {
+          btn.className = "text-left text-xs p-2.5 rounded-lg border-2 border-emerald-500 bg-emerald-50 text-emerald-900 font-bold";
+        } else if (i === optIdx) {
+          btn.className = "text-left text-xs p-2.5 rounded-lg border-2 border-rose-500 bg-rose-50 text-rose-900 font-semibold";
+        } else {
+          btn.className = "text-left text-xs p-2.5 rounded-lg border border-slate-100 bg-slate-50 text-slate-400 opacity-60";
+        }
+      }
+
+      // Hitung skor
+      let correct = 0;
+      const totalQ = kuisDatabase[bab].soal.length;
+      Object.keys(quizAnswers).forEach(k => {
+        if (quizAnswers[k] === kuisDatabase[bab].soal[k].c) correct++;
+      });
+
+      currentBenarCount = correct;
+      currentSkorKuis = correct * 10;
+      document.getElementById('quizScoreText').innerText = `${currentSkorKuis} / 100`;
+      document.getElementById('totalPointDisplay').innerText = currentSkorKuis;
+
+      if (Object.keys(quizAnswers).length === totalQ) {
+        document.getElementById('quizFinishBox').classList.remove('hidden');
+        document.getElementById('quizSummaryNotice').innerText = `Hebat! Kamu berhasil menjawab ${correct} dari ${totalQ} soal dengan benar. Skor akhir: ${currentSkorKuis}!`;
+      }
+    }
+
+    function resetQuiz() {
+      const b = document.getElementById('evalBabSelect').value;
+      loadQuiz(b);
+    }
+
+    /* 5. LKPD DINAMIS */
+    const lkpdContent = {
+      1: {
+        title: "BAB 1: PANCASILA DALAM KEHIDUPANKU",
+        html: `
+          <div class="space-y-3 text-xs">
+            <p class="text-slate-600"><b>Petunjuk:</b> Berikan contoh pengamalan sila Pancasila dalam kegiatan sehari-hari Anda:</p>
+            <div class="space-y-2">
+              <input type="text" id="lkpd_b1_s1" placeholder="Sila 1 (Ketuhanan): Contoh doa/ibadah..." class="w-full p-2 border rounded-lg">
+              <input type="text" id="lkpd_b1_s2" placeholder="Sila 2 (Kemanusiaan): Contoh tolong-menolong..." class="w-full p-2 border rounded-lg">
+              <input type="text" id="lkpd_b1_s3" placeholder="Sila 3 (Persatuan): Contoh kerukunan bersama..." class="w-full p-2 border rounded-lg">
+              <input type="text" id="lkpd_b1_s4" placeholder="Sila 4 (Musyawarah): Contoh diskusi di kelas..." class="w-full p-2 border rounded-lg">
+              <input type="text" id="lkpd_b1_s5" placeholder="Sila 5 (Keadilan): Contoh bersikap adil..." class="w-full p-2 border rounded-lg">
+            </div>
+          </div>
+        `
+      },
+      2: {
+        title: "BAB 2: NORMA DALAM KEHIDUPANKU",
+        html: `
+          <div class="space-y-3 text-xs">
+            <p class="text-slate-600"><b>Petunjuk:</b> Tuliskan masing-masing 1 contoh penerapan norma yang pernah kamu lakukan:</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <input type="text" id="lkpd_b2_n1" placeholder="Norma Agama: Contoh beribadah..." class="p-2 border rounded-lg">
+              <input type="text" id="lkpd_b2_n2" placeholder="Norma Kesusilaan: Contoh bertindak jujur..." class="p-2 border rounded-lg">
+              <input type="text" id="lkpd_b2_n3" placeholder="Norma Kesopanan: Contoh bertutur santun..." class="p-2 border rounded-lg">
+              <input type="text" id="lkpd_b2_n4" placeholder="Norma Hukum: Contoh tertib aturan lalu lintas..." class="p-2 border rounded-lg">
+            </div>
+          </div>
+        `
+      },
+      3: {
+        title: "BAB 3: KERAGAMAN BUDAYA INDONESIAKU",
+        html: `
+          <div class="space-y-3 text-xs">
+            <p class="text-slate-600"><b>Petunjuk:</b> Sebutkan daerah asal dari unsur kebudayaan nusantara berikut:</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <input type="text" id="lkpd_b3_k1" placeholder="Rumah Gadang berasal dari: (Sumatera Barat)" class="p-2 border rounded-lg">
+              <input type="text" id="lkpd_b3_k2" placeholder="Alat musik Sasando berasal dari: (NTT)" class="p-2 border rounded-lg">
+              <input type="text" id="lkpd_b3_k3" placeholder="Tarian Saman berasal dari: (Aceh)" class="p-2 border rounded-lg">
+              <input type="text" id="lkpd_b3_k4" placeholder="Kuliner Papeda berasal dari: (Papua)" class="p-2 border rounded-lg">
+            </div>
+          </div>
+        `
+      },
+      4: {
+        title: "BAB 4: AKU DAN LINGKUNGAN SEKITARKU",
+        html: `
+          <div class="space-y-3 text-xs">
+            <p class="text-slate-600"><b>Petunjuk:</b> Rencanakan kegiatan gotong royong memelihara lingkungan tempat tinggalmu:</p>
+            <div class="space-y-2">
+              <input type="text" id="lkpd_b4_keg" placeholder="Nama Kegiatan: (Misal: Bersih Selokan RT)" class="w-full p-2 border rounded-lg">
+              <input type="text" id="lkpd_b4_tugas" placeholder="Rencana Pembagian Tugas: (Menyapu, membuang sampah, dll)" class="w-full p-2 border rounded-lg">
+              <textarea id="lkpd_b4_manfaat" placeholder="Manfaat yang diharapkan..." class="w-full p-2 border rounded-lg" rows="2"></textarea>
+            </div>
+          </div>
+        `
+      }
+    };
+
+    function renderLKPD(bab) {
+      const l = lkpdContent[bab];
+      if (!l) return;
+      document.getElementById('lkpdBabHeader').innerText = l.title;
+      document.getElementById('lkpdTaskContent').innerHTML = l.html;
+      const dateEl = document.getElementById('lkpdTanggal');
+      if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().split('T')[0];
+    }
+
+    function onBabSelectionChange(b) {
+      loadQuiz(b);
+      renderLKPD(b);
+    }
+
+    function setEvalMode(m) {
+      const isQuiz = (m === 'kuis');
+      document.getElementById('btn-mode-kuis').className = isQuiz ? 'px-3.5 py-1.5 rounded-xl bg-indigo-600 text-white font-bold text-xs' : 'px-3.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs';
+      document.getElementById('btn-mode-lkpd').className = !isQuiz ? 'px-3.5 py-1.5 rounded-xl bg-indigo-600 text-white font-bold text-xs' : 'px-3.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs';
+      document.getElementById('section-kuis').classList.toggle('hidden', !isQuiz);
+      document.getElementById('section-lkpd').classList.toggle('hidden', isQuiz);
+    }
+
+    /* 6. INTEGRASI GOOGLE APPS SCRIPT (GAS BACK-END) */
+    function kirimNilaiKeAppsScript() {
+      const nama = document.getElementById('quizStudentName').value;
+      const kelas = document.getElementById('quizStudentClass').value;
+      const bab = document.getElementById('evalBabSelect').value;
+
+      if (!nama) {
+        alert("Silakan isi nama siswa terlebih dahulu di bagian atas kuis!");
+        return;
+      }
+
+      const payload = {
+        nama: nama,
+        kelas: kelas,
+        bab: bab,
+        skor: currentSkorKuis,
+        benar: currentBenarCount
+      };
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(res => alert(res.message))
+          .withFailureHandler(err => alert("Gagal menyimpan: " + err))
+          .simpanNilaiKuis(payload);
+      } else {
+        alert("[Mode Demo] Skor kuis siswa " + nama + " (" + currentSkorKuis + ") siap dikirim ke Google Sheets!");
+      }
+    }
+
+    function kirimLkpdKeAppsScript() {
+      const nama = document.getElementById('lkpdNama').value;
+      const kelas = document.getElementById('lkpdKelas').value;
+      const bab = document.getElementById('evalBabSelect').value;
+
+      if (!nama) {
+        alert("Silakan isi nama lengkap pada LKPD!");
+        return;
+      }
+
+      const inputs = document.querySelectorAll('#lkpdTaskContent input, #lkpdTaskContent textarea');
+      const jawaban = {};
+      inputs.forEach(inp => {
+        jawaban[inp.id || inp.placeholder] = inp.value;
+      });
+
+      const payload = {
+        nama: nama,
+        kelas: kelas,
+        bab: bab,
+        jawaban: jawaban
+      };
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(res => alert(res.message))
+          .withFailureHandler(err => alert("Gagal menyimpan LKPD: " + err))
+          .simpanJawabanLKPD(payload);
+      } else {
+        alert("[Mode Demo] Lembar LKPD atas nama " + nama + " berhasil direkam!");
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadQuiz(1);
+      renderLKPD(1);
+    });
+  </script>
+</body>
+</html>
